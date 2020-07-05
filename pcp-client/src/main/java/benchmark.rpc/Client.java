@@ -3,20 +3,53 @@ package benchmark.rpc;
 import benchmark.bean.Page;
 import benchmark.bean.User;
 import benchmark.service.UserService;
+import io.github.free.lock.pcprpc.PcpRpc;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
+import scala.collection.JavaConverters;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
+import scala.compat.java8.FutureConverters;
+import scala.concurrent.ExecutionContext;
+import scala.concurrent.Future;
 
 @State(Scope.Benchmark)
 public class Client extends AbstractClient {
-    public static final int CONCURRENCY = 32;
 
-    private final UserServicePCPClientImpl userService = new UserServicePCPClientImpl();
+    public static final int CONCURRENCY = 32;
+    private final UserServicePCPClientImpl userService;
+
+    public Client() {
+       PcpRpc.ClientPool rpcClient = PcpRpc.getPCClientPool(
+               () -> FutureConverters.toScala(
+                       CompletableFuture.supplyAsync(() -> {
+                           return new PcpRpc.ServerAddress("benchmark-server", 8080);
+                       })
+               ),
+               PcpRpc.defGenerateSandbox(),
+               120,
+               8,
+               ExecutionContext.global()
+        );
+       this.userService = new UserServicePCPClientImpl(rpcClient);
+    }
+
+    /*
+    LinkedList list = new LinkedList();
+        list.add(2);
+        list.add(3);
+        System.out.println(pcpServer.execute(
+                p.toJson(
+                p.call("add", JavaConverters.collectionAsScalaIterable(list).toSeq())
+            )
+            ));
+
+     */
 
     @Override
     protected UserService getUserService() {

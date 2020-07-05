@@ -22,6 +22,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>benchmark.rpc</groupId>
+            <artifactId>benchmark-base</artifactId>
+            <version>${version.benchmark-base}</version>
+        </dependency>
+        <dependency>
             <groupId>io.github.lock-free</groupId>
             <artifactId>pcp_2.12</artifactId>
             <version>0.1.1</version>
