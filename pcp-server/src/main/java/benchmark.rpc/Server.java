@@ -2,10 +2,13 @@ package benchmark.rpc;
 
 import benchmark.service.UserService;
 import io.github.free.lock.pcprpc.PcpRpc;
+import io.github.free.lock.sjson.PathNode;
 import scala.Tuple2;
 import io.github.free.lock.pcp.BoxFun;
 import io.github.free.lock.pcp.PcpServer;
 import io.github.free.lock.pcp.Sandbox;
+import io.github.free.lock.sjson.JSON;
+import io.github.free.lock.sjson.JSONParser;
 import scala.collection.immutable.List;
 import scala.concurrent.ExecutionContext;
 import java.util.HashMap;
@@ -13,6 +16,9 @@ import java.util.Map;
 import benchmark.bean.User;
 import benchmark.service.UserServiceServerImpl;
 import static scala.compat.java8.JFunction.*;
+import scala.collection.mutable.Stack;
+import scala.reflect.ClassTag$;
+
 
 public class Server {
 
@@ -38,15 +44,15 @@ public class Server {
         });
 
         scala.Function2 createUser = func((List<Object> list, PcpServer pcpServer) -> {
-            return userService.createUser((User)list.head());
+            return userService.createUser(JSON.parseTo((String)list.head(), (Object data, Stack<PathNode> path, Stack<Object> stack) -> data, ClassTag$(User.class)));
         });
 
         scala.Function2 getUser = func((List<Object> list, PcpServer pcpServer) -> {
-            return userService.getUser((Long)list.head());
+            return userService.getUser(Long.parseLong((String)list.head()));
         });
 
         scala.Function2 listUser = func((List<Object> list, PcpServer pcpServer) -> {
-            return userService.listUser((Integer)list.head());
+            return userService.listUser(Integer.parseInt((String)list.head()));
         });
         funMap.put("existUser", Sandbox.toSanboxFun(existUser));
         funMap.put("createUser", Sandbox.toSanboxFun(createUser));

@@ -9,8 +9,14 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import io.github.free.lock.sjson.JSON;
 import scala.collection.JavaConverters;
 import scala.concurrent.Await;
+import scala.compat.java8.FutureConverters;
+import scala.collection.mutable.Stack;
+
 
 
 public class UserServicePCPClientImpl implements UserService, Closeable {
@@ -28,14 +34,14 @@ public class UserServicePCPClientImpl implements UserService, Closeable {
     @Override
     public boolean existUser(String email) {
         try {
-            return Await.result(
+            CompletableFuture jFuture = (CompletableFuture)(FutureConverters.toJava(
                     client.call(
                             p.call("existUser", JavaConverters.asScalaBuffer(List.of(email))),
                             2 * 60 * 1000,
                             10 * 1000
-                    ),
-                    scala.concurrent.duration.Duration.create("120 seconds")
-            );
+                    )
+            ));
+            return (Boolean) jFuture.get();
         } catch (Exception e) {
             return true;
         }
@@ -43,21 +49,53 @@ public class UserServicePCPClientImpl implements UserService, Closeable {
 
     @Override
     public boolean createUser(User user) {
-        return false;
+        try {
+            CompletableFuture jFuture = (CompletableFuture)(FutureConverters.toJava(
+                    client.call(
+                            p.call("createUser", JavaConverters.asScalaBuffer(List.of(JSON.stringify(user, (Object data, Stack<String> path) -> null)))),
+                            2 * 60 * 1000,
+                            10 * 1000
+                    )
+            ));
+            return (Boolean) jFuture.get();
+        } catch (Exception e) {
+            return true;
+        }
     }
 
     @Override
     public User getUser(long id) {
-        return null;
+        try {
+            CompletableFuture jFuture = (CompletableFuture)(FutureConverters.toJava(
+                    client.call(
+                            p.call("getUser", JavaConverters.asScalaBuffer(List.of(id))),
+                            2 * 60 * 1000,
+                            10 * 1000
+                    )
+            ));
+            return JSON.parseTo(jFuture.get());
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
     public Page<User> listUser(int pageNo) {
-        return null;
+        try {
+            CompletableFuture jFuture = (CompletableFuture)(FutureConverters.toJava(
+                    client.call(
+                            p.call("listUser", JavaConverters.asScalaBuffer(List.of(pageNo))),
+                            2 * 60 * 1000,
+                            10 * 1000
+                    )
+            ));
+            return (Page<User>)jFuture.get();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
     public void close() throws IOException {
-
     }
 }
