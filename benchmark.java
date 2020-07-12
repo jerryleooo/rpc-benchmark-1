@@ -73,8 +73,6 @@ public class benchmark {
                 .filter(f -> f.getName().endsWith("-jar-with-dependencies.jar"))
                 .findFirst();
 
-        System.out.println(opt);
-
         if (opt.isPresent()) {
             return opt.get();
         }
