@@ -47,7 +47,7 @@ public class Client extends AbstractClient {
 
     @TearDown
     public void close() throws IOException {
-        this.rpcClient.clean();
+        this.userService.close();
     }
 
     @Benchmark

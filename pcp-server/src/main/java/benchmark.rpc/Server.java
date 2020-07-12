@@ -1,5 +1,6 @@
 package benchmark.rpc;
 
+import benchmark.bean.Page;
 import benchmark.service.UserService;
 import com.google.gson.Gson;
 import io.github.free.lock.pcprpc.PcpRpc;
@@ -44,32 +45,25 @@ public class Server {
         Map<String, BoxFun> funMap = new HashMap<String, BoxFun>();
         scala.Function2 existUser = func((List<Object> list, PcpServer pcpServer) -> {
             String email = list.head().toString();
-            System.out.println("existUser: " + email);
             return userService.existUser(email);
         });
 
         scala.Function2 createUser = func((List<Object> list, PcpServer pcpServer) -> {
-            System.out.println("createUser");
             Gson g = new Gson();
             User user = g.fromJson(list.head().toString(), User.class);
             return userService.createUser(user);
         });
 
         scala.Function2 getUser = func((List<Object> list, PcpServer pcpServer) -> {
-            System.out.println(list.length());
-            System.out.println("getUser");
             Object head = list.head();
-            System.out.println(head);
-            System.out.println(head.toString());
-            System.out.println(Long.parseLong(head.toString()));
             User user = userService.getUser(Long.parseLong(head.toString()));
-            System.out.println(user);
             return user;
         });
 
         scala.Function2 listUser = func((List<Object> list, PcpServer pcpServer) -> {
-            System.out.println("listUser");
-            return userService.listUser(Integer.parseInt(list.head().toString()));
+            Page<User> result = userService.listUser(Integer.parseInt(list.head().toString()));
+            System.out.println("listUser: " + result);
+            return result;
         });
         funMap.put("existUser", Sandbox.toSanboxFun(existUser));
         funMap.put("createUser", Sandbox.toSanboxFun(createUser));

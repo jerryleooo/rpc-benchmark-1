@@ -37,15 +37,13 @@ public class UserServicePCPClientImpl implements UserService, Closeable {
     @Override
     public boolean existUser(String email) {
         try {
-            System.out.println("existUser");
             scala.concurrent.Future future = client.call(
                     p.call("existUser", JavaConverters.asScalaBuffer(List.of(email))),
                     2 * 60 * 1000,
                     10 * 1000
             );
             String resultString = Await.result(future, Duration.Inf()).toString();
-            System.out.println("existUser: " + resultString);
-            return true;
+            return resultString == "true";
         } catch (Exception e) {
             return true;
         }
@@ -54,15 +52,13 @@ public class UserServicePCPClientImpl implements UserService, Closeable {
     @Override
     public boolean createUser(User user) {
         try {
-            System.out.println("createUser");
             scala.concurrent.Future future = client.call(
                     p.call("createUser", JavaConverters.asScalaBuffer(List.of(JSON.stringify(user, (Object data, Stack<String> path) -> null)))),
                     2 * 60 * 1000,
                     10 * 1000
             );
             String resultString = Await.result(future, Duration.Inf()).toString();
-            System.out.println("createUser: " + resultString);
-            return true;
+            return resultString == "true";
         } catch (Exception e) {
             return true;
         }
@@ -71,15 +67,12 @@ public class UserServicePCPClientImpl implements UserService, Closeable {
     @Override
     public User getUser(long id) {
         try {
-            System.out.println("getUser");
-
             scala.concurrent.Future future = client.call(
                     p.call("getUser", JavaConverters.asScalaBuffer(List.of(id))),
                     2 * 60 * 1000,
                     10 * 1000
             );
             String userString = Await.result(future, Duration.Inf()).toString();
-            System.out.println("getUser: " + userString);
             Gson g = new Gson();
             return g.fromJson(userString, User.class);
         } catch (Exception e) {
@@ -90,7 +83,6 @@ public class UserServicePCPClientImpl implements UserService, Closeable {
     @Override
     public Page<User> listUser(int pageNo) {
         try {
-            System.out.println("listUser");
             scala.concurrent.Future future = client.call(
                     p.call("listUser", JavaConverters.asScalaBuffer(List.of(pageNo))),
                     2 * 60 * 1000,
@@ -108,5 +100,6 @@ public class UserServicePCPClientImpl implements UserService, Closeable {
 
     @Override
     public void close() throws IOException {
+        this.client.clean();
     }
 }
