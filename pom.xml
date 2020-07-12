@@ -54,6 +54,8 @@
         <module>brpc-server</module>
         <module>rsocket-server</module>
         <module>rsocket-client</module>
+        <module>pcp-server</module>
+        <module>pcp-client</module>
     </modules>
 
     <build>

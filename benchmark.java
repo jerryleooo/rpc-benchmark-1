@@ -23,8 +23,7 @@ public class benchmark {
         installBenchmarkBase();
 
         var allTasks = getAllTasks()
-                .filter(t -> !t.startsWith("jupiter"))
-                //.filter(t -> t.compareTo("jupiter") > 0)
+                .filter(t -> t.compareTo("jupiter") > 0)
                 .collect(Collectors.toList());
 
         System.out.println("找到以下benchmark项目:");
