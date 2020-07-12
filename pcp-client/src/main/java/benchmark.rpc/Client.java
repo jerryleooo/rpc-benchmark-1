@@ -23,9 +23,10 @@ public class Client extends AbstractClient {
 
     public static final int CONCURRENCY = 32;
     private final UserServicePCPClientImpl userService;
+    private final PcpRpc.ClientPool rpcClient;
 
     public Client() {
-       PcpRpc.ClientPool rpcClient = PcpRpc.getPCClientPool(
+       this.rpcClient = PcpRpc.getPCClientPool(
                () -> FutureConverters.toScala(
                        CompletableFuture.supplyAsync(() -> {
                            return new PcpRpc.ServerAddress("benchmark-server", 8080);
@@ -35,21 +36,9 @@ public class Client extends AbstractClient {
                120,
                8,
                ExecutionContext.global()
-        );
-       this.userService = new UserServicePCPClientImpl(rpcClient);
+       );
+       this.userService = new UserServicePCPClientImpl(this.rpcClient);
     }
-
-    /*
-    LinkedList list = new LinkedList();
-        list.add(2);
-        list.add(3);
-        System.out.println(pcpServer.execute(
-                p.toJson(
-                p.call("add", JavaConverters.collectionAsScalaIterable(list).toSeq())
-            )
-            ));
-
-     */
 
     @Override
     protected UserService getUserService() {
@@ -58,7 +47,7 @@ public class Client extends AbstractClient {
 
     @TearDown
     public void close() throws IOException {
-        userService.close();
+        this.rpcClient.clean();
     }
 
     @Benchmark

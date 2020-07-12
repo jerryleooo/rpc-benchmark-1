@@ -1,7 +1,10 @@
 package benchmark.rpc;
 
 import benchmark.service.UserService;
+import com.google.gson.Gson;
 import io.github.free.lock.pcprpc.PcpRpc;
+import io.github.free.lock.saio.AIO;
+import io.github.free.lock.saio.AIOServer;
 import io.github.free.lock.sjson.PathNode;
 import scala.Tuple2;
 import io.github.free.lock.pcp.BoxFun;
@@ -22,7 +25,7 @@ import scala.reflect.ClassTag$;
 
 public class Server {
 
-    public static final String host = "127.0.0.1";
+    public static final String host = "0.0.0.0";
     public static final int port = 8080;
 
     @SuppressWarnings("unchecked")
@@ -40,19 +43,33 @@ public class Server {
 
         Map<String, BoxFun> funMap = new HashMap<String, BoxFun>();
         scala.Function2 existUser = func((List<Object> list, PcpServer pcpServer) -> {
-            return userService.existUser((String)list.head());
+            String email = list.head().toString();
+            System.out.println("existUser: " + email);
+            return userService.existUser(email);
         });
 
         scala.Function2 createUser = func((List<Object> list, PcpServer pcpServer) -> {
-            return userService.createUser(JSON.parseTo((String)list.head(), (Object data, Stack<PathNode> path, Stack<Object> stack) -> data, ClassTag$(User.class)));
+            System.out.println("createUser");
+            Gson g = new Gson();
+            User user = g.fromJson(list.head().toString(), User.class);
+            return userService.createUser(user);
         });
 
         scala.Function2 getUser = func((List<Object> list, PcpServer pcpServer) -> {
-            return userService.getUser(Long.parseLong((String)list.head()));
+            System.out.println(list.length());
+            System.out.println("getUser");
+            Object head = list.head();
+            System.out.println(head);
+            System.out.println(head.toString());
+            System.out.println(Long.parseLong(head.toString()));
+            User user = userService.getUser(Long.parseLong(head.toString()));
+            System.out.println(user);
+            return user;
         });
 
         scala.Function2 listUser = func((List<Object> list, PcpServer pcpServer) -> {
-            return userService.listUser(Integer.parseInt((String)list.head()));
+            System.out.println("listUser");
+            return userService.listUser(Integer.parseInt(list.head().toString()));
         });
         funMap.put("existUser", Sandbox.toSanboxFun(existUser));
         funMap.put("createUser", Sandbox.toSanboxFun(createUser));
@@ -61,26 +78,17 @@ public class Server {
         return new Sandbox(toScalaImmutableMap(funMap));
     }
 
-    public static void main(String[] args) throws Exception {
-
-        PcpRpc.getPCServer(host, port, getSandbox(), ExecutionContext.global());
-
-        /*
-        PcpServer pcpServer = new PcpServer(sandbox);
-
-        pcpServer.execute("[\"add\", 1, 2]");
-
-        PcpClient p = new PcpClient();
-        // """["add", 1, ["add", 2, 3]]"""
-        // output: 6
-        LinkedList list = new LinkedList();
-        list.add(2);
-        list.add(3);
-        System.out.println(pcpServer.execute(
-                p.toJson(
-                        p.call("add", JavaConverters.collectionAsScalaIterable(list).toSeq())
-                )
-        ));
-        */
+    public static void main(String[] args) {
+        try {
+            AIOServer.Server server = PcpRpc.getPCServer(host, port, getSandbox(), ExecutionContext.global());
+            System.out.println(server.server() == server.server());
+            System.out.println(server.server().getLocalAddress());
+            System.out.println(server.server().isOpen());
+            System.out.println(server.server().getLocalAddress());
+            System.out.println("exiting?");
+            Thread.currentThread().join();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 }

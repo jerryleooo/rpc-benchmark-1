@@ -23,7 +23,7 @@ public class benchmark {
         installBenchmarkBase();
 
         var allTasks = getAllTasks()
-                .filter(t -> !t.startsWith("jupiter"))
+                .filter(t -> t.startsWith("pcp") || t.startsWith("springboot"))
                 //.filter(t -> t.compareTo("jupiter") > 0)
                 .collect(Collectors.toList());
 
@@ -73,6 +73,8 @@ public class benchmark {
         var opt = Stream.of(childList)
                 .filter(f -> f.getName().endsWith("-jar-with-dependencies.jar"))
                 .findFirst();
+
+        System.out.println(opt);
 
         if (opt.isPresent()) {
             return opt.get();
